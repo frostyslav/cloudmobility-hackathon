@@ -18,7 +18,7 @@
       rel="stylesheet">
 
   <!-- Custom styles for this template-->
-  <link href="css/sb-admin-2.min.css" rel="stylesheet">
+  <link href="css/sb-admin-2.css" rel="stylesheet">
 
   <title>Editor</title>
   <style type="text/css" media="screen">
@@ -82,9 +82,14 @@
                                 <input type="email" class="form-control form-control-user" id="repoPath"
                                     placeholder="Path">
                             </div>
-                            <a class="btn btn-primary btn-user btn-block" id="runRepo">
+                            <a class="btn btn-success btn-user btn-block" id="runRepo">
                                 Send Code
                             </a>
+                            <hr>
+                            <div class="form-group" id="spinnerRepo" style="display:none" >
+                                <span class="spinner-border spinner-border-sm" ></span>
+                                Deploying code
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -106,6 +111,11 @@
                             </div>
                             <div id="editor">
                             </div>
+                            <hr>
+                            <div class="form-group" id="spinnerEditor" style="display:none">
+                                <span class="spinner-border spinner-border-sm"  ></span>
+                                Deploying code
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -125,7 +135,7 @@
 <script src="js/sb-admin-2.min.js"></script>
 
 <script>
-    
+
 $('#runRepo').on('click', function (e) {
     const url = document.getElementById("endpointUrl").value;
 
@@ -137,7 +147,9 @@ $('#runRepo').on('click', function (e) {
         }
     };
 
-    console.log(data);
+    $('#spinnerRepo').show();
+    $('#runRepo').prop("disabled", true);
+    $('#runEditor').prop("disabled", true);
 
     const other_params = {
         headers : { "content-type" : "application/json; charset=UTF-8" },
@@ -149,15 +161,30 @@ $('#runRepo').on('click', function (e) {
     fetch(url, other_params)
         .then(function(response) {
             if (response.ok) {
-                alert("All done your code is on the way to be deployed!");
+                checkDeploy();
             } else {
                 throw new Error("Could not reach the API: " + response.statusText);
             }
         }).catch(function(error) {
+            $('#spinnerRepo').hide();
+            $('#runRepo').prop("disabled", false);
+            $('#runEditor').prop("disabled", false);
             alert(error.message);
         });
     return true;
 })
+
+function checkDeploy(){
+    
+    //call the api to check if the proccess is done
+    if(false){
+        $('#spinnerRepo').hide();
+        $('#spinnerEditor').show();
+        $('#runRepo').prop("disabled", false);
+        $('#runEditor').prop("disabled", false);
+    }
+    setTimeout(checkDeploy, 5000);
+}
 </script>
 
 <script src="kitchen-sink/require.js"></script>
@@ -208,15 +235,23 @@ require(["ace/ace", "ace/ext/language_tools"], function(ace) {
             mode : "cors"
         };
 
+
+        $('#spinnerEditor').show();
+        $('#runRepo').prop("disabled", true);
+        $('#runEditor').prop("disabled", true);
+
+
         fetch(url, other_params)
             .then(function(response) {
                 if (response.ok) {
-                    //console.log(response);
-                    alert("All done your code is on the way to be deployed!");
+                    checkDeploy();
                 } else {
                     throw new Error("Could not reach the API: " + response.statusText);
                 }
             }).catch(function(error) {
+                $('#spinnerEditor').hide();
+                $('#runRepo').prop("disabled", false);
+                $('#runEditor').prop("disabled", false);
                 alert(error.message);
             });
         return true;
@@ -230,23 +265,28 @@ require(["ace/ace", "ace/ext/language_tools"], function(ace) {
     buildDom(["div", { class: "toolbar" },
         ["button", {
             ref: "saveButton",
+            class: "btn",
             onclick: save
         }, "save"],
         ["button", {
             ref: "undoButton",
+            class: "btn",
             onclick: function() {
                 editor.undo();
             }
         }, "undo"],
         ["button", {
             ref: "redoButton",
+            class: "btn",
             onclick: function() {
                 editor.redo();
             }
         }, "redo"],
         ["button", {
+            class: "btn btn-success",
+            id: "runEditor",
             onclick: runCode
-        }, "RUN"],
+        }, "Send Code"],
     ], document.getElementById("editor"), refs);
     document.getElementById("editor").appendChild(editor.container)
     

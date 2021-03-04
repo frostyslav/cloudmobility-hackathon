@@ -26,7 +26,7 @@
   --gray-dark: #5a5c69;
   --primary: #4e73df;
   --secondary: #858796;
-  --success: #1cc88a;
+  --success: #058052;
   --info: #36b9cc;
   --warning: #f6c23e;
   --danger: #e74a3b;
@@ -2422,8 +2422,8 @@ fieldset:disabled a.btn {
 
 .btn-success {
   color: #fff;
-  background-color: #1cc88a;
-  border-color: #1cc88a;
+  background-color: #058d5b;
+  border-color: #058d5b;
 }
 
 .btn-success:hover {
@@ -10830,8 +10830,9 @@ a:focus {
 }
 
 .bg-register-image {
-  background: url("https://source.unsplash.com/Mv9hjnEUHR4/600x800");
+  background: url("https://cloudmobility.io/static/9af3d7ecd516aa3150d024e1a27d6a73/3c04b/hero.png");
   background-position: center;
+  background-color: black;
   background-size: cover;
 }
 
