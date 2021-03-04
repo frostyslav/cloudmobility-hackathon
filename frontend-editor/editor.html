@@ -17,6 +17,9 @@
     </style>
 </head>
 <body>
+<div>
+    <input type="text" placeholder="Type " id="inputId" value="http://localhost:8080" />
+</div>
 
 <script src="kitchen-sink/require.js"></script>
 <script>
@@ -52,7 +55,32 @@ require(["ace/ace", "ace/ext/language_tools"], function(ace) {
         bindKey: { win: "ctrl-s", mac: "cmd-s" }
     });
     function runCode() {
-        alert("done");
+        
+        const url = document.getElementById("inputId").value;
+        const data = {
+            "language": "go",
+            "code": btoa(editor.getValue())
+        };
+
+        const other_params = {
+            headers : { "content-type" : "application/json; charset=UTF-8" },
+            body : data,
+            method : "POST",
+            mode : "cors"
+        };
+
+        fetch(url, other_params)
+            .then(function(response) {
+                if (response.ok) {
+                    //console.log(response);
+                    alert("All done your code is on the way to be deployed!");
+                } else {
+                    throw new Error("Could not reach the API: " + response.statusText);
+                }
+            }).catch(function(error) {
+                alert(error.message);
+            });
+        return true;
     }
     editor.commands.addCommand({
         name: "runCode",
