@@ -2,22 +2,28 @@ package webserver
 
 import (
 	"fmt"
+	"github.com/frostyslav/cloudmobility-hackathon/app/controller"
 	"log"
 	"net/http"
 
-	"github.com/frostyslav/cloudmobility-hackathon/app/image"
+	"github.com/frostyslav/cloudmobility-hackathon/app/model"
 	"github.com/frostyslav/cloudmobility-hackathon/app/render"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 var Serve http.Handler
+var hashmap *model.Hash
 
 func init() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", status).Methods("GET")
 	r.HandleFunc("/func_create", funcCreate).Methods("POST")
-	//r.HandleFunc("/func_status", funcStatus).Methods("GET")
+	r.HandleFunc("/func_status/{id}", funcStatus).Methods("GET")
+
+	m := model.Hash{}
+	hashmap = m.New()
 
 	Serve = r
 }
@@ -27,36 +33,31 @@ func status(w http.ResponseWriter, r *http.Request) {
 }
 
 func funcCreate(w http.ResponseWriter, r *http.Request) {
-	req := &CreateFuncFromRepoRequest{}
+	req := &model.FuncCreateRequest{}
 	err := render.ReadJSON(r, req)
 	if err != nil {
 		log.Print(err)
 	}
 
-	log.Printf("repo url: %s, repo tag: %s, directory: %s, lang: %s", req.Repo.URL, req.Repo.Tag, req.Repo.Path, req.Language)
-	image, _ := image.Build()
-	resp := &ImageURLResponse{
-		URL: image,
+	myuuid := uuid.New()
+	hashmap.SetStatus(myuuid.String(), "")
+
+	go controller.Run(hashmap, req.Repo.URL, req.Repo.Tag, req.Repo.Path, myuuid.String())
+
+	resp := &model.FuncCreateResponse{
+		ID: myuuid.String(),
 	}
 
 	render.WriteJSONwithCode(w, resp, 200)
 }
 
-// ImageURLResponse - response for /create_func_from_repo.
-// swagger:model ImageURLResponse
-type ImageURLResponse struct {
-	// Image URL
-	URL string `json:"image_url"`
-}
+func funcStatus(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
 
-type CreateFuncFromRepoRequest struct {
-	Repo     Repo   `json:"repo"`
-	Language string `json:"language"`
-	Code     string `json:"code"`
-}
+	resp := &model.FuncStatusResponse{
+		ID:     vars["id"],
+		Status: hashmap.GetStatus(vars["id"]),
+	}
 
-type Repo struct {
-	URL  string `json:"url"`
-	Tag  string `json:"tag"`
-	Path string `json:"path"`
+	render.WriteJSONwithCode(w, resp, 200)
 }
