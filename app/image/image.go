@@ -24,7 +24,7 @@ type ErrorDetail struct {
 	Message string `json:"message"`
 }
 
-func Build(path, repoName string) (string, error) {
+func Build(path, registryURL, repoName string) (string, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return "", fmt.Errorf("docker client: %s", err)
@@ -35,15 +35,17 @@ func Build(path, repoName string) (string, error) {
 	//	return "", fmt.Errorf("remove .git: %s", err)
 	//}
 
-	err = imageBuild(cli, path, repoName)
+	imageName := fmt.Sprintf("%s/%s", registryURL, repoName)
+
+	err = imageBuild(cli, path, imageName)
 	if err != nil {
 		return "", fmt.Errorf("internal image build: %s", err)
 	}
 
-	return "", nil
+	return repoName, nil
 }
 
-func imageBuild(dockerClient *client.Client, path, repoName string) error {
+func imageBuild(dockerClient *client.Client, path, imageName string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
 	defer cancel()
 
@@ -54,7 +56,7 @@ func imageBuild(dockerClient *client.Client, path, repoName string) error {
 
 	opts := types.ImageBuildOptions{
 		Dockerfile: "Dockerfile",
-		Tags:       []string{repoName},
+		Tags:       []string{imageName},
 		Remove:     true,
 	}
 	res, err := dockerClient.ImageBuild(ctx, tar, opts)
@@ -92,4 +94,36 @@ func print(rd io.Reader) error {
 	}
 
 	return nil
+}
+
+func Push(imageName string) (string, error) {
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		return "", fmt.Errorf("docker client: %s", err)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	defer cancel()
+
+	//authConfigBytes, err := json.Marshal(authConfig)
+	//if err != nil {
+	//	return "", fmt.Errorf("json marshal: %s", err)
+	//}
+	//authConfigEncoded := base64.URLEncoding.EncodeToString(authConfigBytes)
+
+	tag := imageName
+	opts := types.ImagePushOptions{} //RegistryAuth: authConfigEncoded}
+	rd, err := cli.ImagePush(ctx, tag, opts)
+	if err != nil {
+		return "", fmt.Errorf("image push: %s", err)
+	}
+
+	defer rd.Close()
+
+	err = print(rd)
+	if err != nil {
+		return "", fmt.Errorf("print: %s", err)
+	}
+
+	return "", nil
 }
