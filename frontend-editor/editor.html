@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Editor</title>
+  <style type="text/css" media="screen">
+
+    .ace_editor, .toolbar {
+        border: 1px solid lightgray;
+        margin: auto;
+        width: 80%;
+    } 
+    .ace_editor {
+        height: 200px;
+    }
+    </style>
+</head>
+<body>
+<div>
+    <input type="text" placeholder="Type " id="inputId" value="http://localhost:8080" />
+</div>
+
+<script src="kitchen-sink/require.js"></script>
+<script>
+// setup paths
+require.config({paths: { "ace" : "lib/ace"}});
+// load ace and extensions
+require(["ace/ace", "ace/ext/language_tools"], function(ace) {
+    var buildDom = require("ace/lib/dom").buildDom;
+    var editor = ace.edit();
+    editor.setOptions({
+        theme: "ace/theme/twilight",
+        mode: "ace/mode/golang",
+        maxLines: 30,
+        minLines: 30,
+        autoScrollEditorIntoView: true,
+    });
+    var refs = {};
+    function updateToolbar() {
+        refs.saveButton.disabled = editor.session.getUndoManager().isClean();
+        refs.undoButton.disabled = !editor.session.getUndoManager().hasUndo();
+        refs.redoButton.disabled = !editor.session.getUndoManager().hasRedo();
+    }
+    editor.on("input", updateToolbar);
+    editor.session.setValue(localStorage.savedValue || "Welcome to ace Toolbar demo!")
+    function save() {
+        localStorage.savedValue = editor.getValue(); 
+        editor.session.getUndoManager().markClean();
+        updateToolbar();
+    }
+    editor.commands.addCommand({
+        name: "save",
+        exec: save,
+        bindKey: { win: "ctrl-s", mac: "cmd-s" }
+    });
+    function runCode() {
+        
+        const url = document.getElementById("inputId").value;
+        const data = {
+            "language": "go",
+            "code": btoa(editor.getValue())
+        };
+
+        const other_params = {
+            headers : { "content-type" : "application/json; charset=UTF-8" },
+            body : data,
+            method : "POST",
+            mode : "cors"
+        };
+
+        fetch(url, other_params)
+            .then(function(response) {
+                if (response.ok) {
+                    //console.log(response);
+                    alert("All done your code is on the way to be deployed!");
+                } else {
+                    throw new Error("Could not reach the API: " + response.statusText);
+                }
+            }).catch(function(error) {
+                alert(error.message);
+            });
+        return true;
+    }
+    editor.commands.addCommand({
+        name: "runCode",
+        exec: runCode,
+        bindKey: { win: "ctrl-r", mac: "cmd-r" }
+    });
+    
+    buildDom(["div", { class: "toolbar" },
+        ["button", {
+            ref: "saveButton",
+            onclick: save
+        }, "save"],
+        ["button", {
+            ref: "undoButton",
+            onclick: function() {
+                editor.undo();
+            }
+        }, "undo"],
+        ["button", {
+            ref: "redoButton",
+            onclick: function() {
+                editor.redo();
+            }
+        }, "redo"],
+        ["button", {
+            onclick: runCode
+        }, "RUN"],
+    ], document.body, refs);
+    document.body.appendChild(editor.container)
+    
+    window.editor = editor;
+});
+
+</script>
+
+</body>
+</html>
