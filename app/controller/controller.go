@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/base64"
 	"fmt"
+	"github.com/frostyslav/cloudmobility-hackathon/app/knative"
 	"log"
 	"os"
 	"strings"
@@ -115,6 +116,15 @@ func buildAndCreate(hashmap *model.Hash, path, repoName, id string) error {
 		return fmt.Errorf("image build: %s", err)
 	}
 	hashmap.SetStatus(id, "image push done")
+
+	url, err := knative.Create(id, imageName)
+	if err != nil {
+		hashmap.SetStatus(id, "func create failed")
+		return fmt.Errorf("knative create: %s", err)
+	}
+
+	hashmap.SetStatus(id, "finished")
+	hashmap.SetURL(id, url)
 
 	return nil
 }

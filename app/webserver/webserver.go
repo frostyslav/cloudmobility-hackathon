@@ -44,23 +44,24 @@ func funcCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	myuuid := uuid.New()
+	customUuid := fmt.Sprintf("f%s", myuuid.String())
 
 	if req.Repo.URL != "" {
-		go controller.RunFromRepo(hashmap, req.Repo.URL, req.Repo.Tag, req.Repo.Path, myuuid.String())
+		go controller.RunFromRepo(hashmap, req.Repo.URL, req.Repo.Tag, req.Repo.Path, customUuid)
 	} else if req.Code != "" {
 		if req.Language == "" {
 			req.Language = "go"
 		}
-		go controller.RunFromCode(hashmap, req.Code, myuuid.String(), req.Language)
+		go controller.RunFromCode(hashmap, req.Code, customUuid, req.Language)
 	} else {
 		render.WriteJSONwithCode(w, nil, 400)
 		return
 	}
 
-	hashmap.SetStatus(myuuid.String(), "")
+	hashmap.SetStatus(customUuid, "")
 
 	resp := &model.FuncCreateResponse{
-		ID: myuuid.String(),
+		ID: customUuid,
 	}
 
 	render.WriteJSONwithCode(w, resp, 200)
