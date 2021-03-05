@@ -56,7 +56,7 @@ func (hash *Hash) SetStatus(key, value string) {
 
 func (hash *Hash) SetURL(key, url string) {
 	hash.mu.Lock()
-	hash.data[key] = &request{url: url}
+	hash.data[key].url = url
 	hash.mu.Unlock()
 }
 
@@ -66,6 +66,17 @@ func (hash *Hash) GetStatus(key string) string {
 	val, ok := hash.data[key]
 	if ok {
 		return val.status
+	}
+
+	return ""
+}
+
+func (hash *Hash) GetURL(key string) string {
+	hash.mu.RLock()
+	defer hash.mu.RUnlock()
+	val, ok := hash.data[key]
+	if ok {
+		return val.url
 	}
 
 	return ""
