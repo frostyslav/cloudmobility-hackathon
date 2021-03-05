@@ -13,8 +13,6 @@ import (
 	"github.com/docker/docker/pkg/archive"
 )
 
-var dockerRegistryUserID = ""
-
 type ErrorLine struct {
 	Error       string      `json:"error"`
 	ErrorDetail ErrorDetail `json:"errorDetail"`
@@ -30,23 +28,23 @@ func Build(path, registryURL, repoName string) (string, error) {
 		return "", fmt.Errorf("docker client: %s", err)
 	}
 
-	//err = os.RemoveAll(fmt.Sprintf("%s/.git", path))
-	//if err != nil {
-	//	return "", fmt.Errorf("remove .git: %s", err)
-	//}
-
-	imageName := fmt.Sprintf("%s/%s", registryURL, repoName)
+	imageName := ""
+	if registryURL != "" {
+		imageName = fmt.Sprintf("%s/%s", registryURL, repoName)
+	} else {
+		imageName = fmt.Sprintf("%s", repoName)
+	}
 
 	err = imageBuild(cli, path, imageName)
 	if err != nil {
 		return "", fmt.Errorf("internal image build: %s", err)
 	}
 
-	return repoName, nil
+	return imageName, nil
 }
 
 func imageBuild(dockerClient *client.Client, path, imageName string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
 	defer cancel()
 
 	tar, err := archive.TarWithOptions(path, &archive.TarOptions{})
@@ -96,13 +94,13 @@ func print(rd io.Reader) error {
 	return nil
 }
 
-func Push(imageName string) (string, error) {
+func Push(imageName string) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		return "", fmt.Errorf("docker client: %s", err)
+		return fmt.Errorf("docker client: %s", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*120)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
 	defer cancel()
 
 	//authConfigBytes, err := json.Marshal(authConfig)
@@ -112,18 +110,18 @@ func Push(imageName string) (string, error) {
 	//authConfigEncoded := base64.URLEncoding.EncodeToString(authConfigBytes)
 
 	tag := imageName
-	opts := types.ImagePushOptions{} //RegistryAuth: authConfigEncoded}
+	opts := types.ImagePushOptions{RegistryAuth: ""} //RegistryAuth: authConfigEncoded}
 	rd, err := cli.ImagePush(ctx, tag, opts)
 	if err != nil {
-		return "", fmt.Errorf("image push: %s", err)
+		return fmt.Errorf("image push: %s", err)
 	}
 
 	defer rd.Close()
 
 	err = print(rd)
 	if err != nil {
-		return "", fmt.Errorf("print: %s", err)
+		return fmt.Errorf("print: %s", err)
 	}
 
-	return "", nil
+	return nil
 }

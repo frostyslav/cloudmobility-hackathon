@@ -2,15 +2,15 @@ package model
 
 import "sync"
 
-// FuncCreateResponse - response for /create_func_from_repo.
+// FuncCreateResponse - response for /func_create.
 // swagger:model FuncCreateResponse
 type FuncCreateResponse struct {
 	// Request ID
 	ID string `json:"id"`
 }
 
-// FuncCreateResponse - response for /create_func_from_repo.
-// swagger:model FuncCreateResponse
+// FuncCreateResponse - response for /func_create.
+// swagger:model FuncStatusResponse
 type FuncStatusResponse struct {
 	// Request ID
 	ID     string `json:"id"`
@@ -18,12 +18,16 @@ type FuncStatusResponse struct {
 	URL    string `json:"url"`
 }
 
+// FuncCreateResponse - request for /func_status.
+// swagger:model FuncCreateRequest
 type FuncCreateRequest struct {
 	Repo     Repo   `json:"repo"`
 	Language string `json:"language"`
 	Code     string `json:"code"`
 }
 
+// FuncStatusRequest - request for /func_status.
+// swagger:model FuncStatusRequest
 type FuncStatusRequest struct {
 	ID string `json:"id"`
 }

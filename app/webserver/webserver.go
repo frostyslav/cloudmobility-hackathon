@@ -3,13 +3,12 @@ package webserver
 import (
 	"fmt"
 	"github.com/frostyslav/cloudmobility-hackathon/app/controller"
-	"log"
-	"net/http"
-
 	"github.com/frostyslav/cloudmobility-hackathon/app/model"
 	"github.com/frostyslav/cloudmobility-hackathon/app/render"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"log"
+	"net/http"
 )
 
 var Serve http.Handler
@@ -39,10 +38,26 @@ func funcCreate(w http.ResponseWriter, r *http.Request) {
 		log.Print(err)
 	}
 
-	myuuid := uuid.New()
-	hashmap.SetStatus(myuuid.String(), "")
+	if req.Repo.URL == "" && req.Code == "" {
+		render.WriteJSONwithCode(w, nil, 400)
+		return
+	}
 
-	go controller.Run(hashmap, req.Repo.URL, req.Repo.Tag, req.Repo.Path, myuuid.String())
+	myuuid := uuid.New()
+
+	if req.Repo.URL != "" {
+		go controller.RunFromRepo(hashmap, req.Repo.URL, req.Repo.Tag, req.Repo.Path, myuuid.String())
+	} else if req.Code != "" {
+		if req.Language == "" {
+			req.Language = "go"
+		}
+		go controller.RunFromCode(hashmap, req.Code, myuuid.String(), req.Language)
+	} else {
+		render.WriteJSONwithCode(w, nil, 400)
+		return
+	}
+
+	hashmap.SetStatus(myuuid.String(), "")
 
 	resp := &model.FuncCreateResponse{
 		ID: myuuid.String(),

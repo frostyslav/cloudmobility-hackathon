@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,6 +11,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+var (
+	port *int
+)
+
 func init() {
 	l := logrus.New()
 	l.Formatter = &logrus.TextFormatter{FullTimestamp: true, ForceColors: true}
@@ -17,16 +22,14 @@ func init() {
 	l.Out = os.Stdout
 
 	log.SetOutput(l.Writer())
+
+	port = flag.Int("port", 8080, "port number")
 }
 
 func main() {
+	flag.Parse()
 
-	//http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	//	fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-	//})
+	log.Printf("Listening on localhost:%d\n", *port)
 
-	port := 8080
-	log.Println("Listening on localhost:8080")
-
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), webserver.Serve))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), webserver.Serve))
 }
