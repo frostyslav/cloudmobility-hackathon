@@ -2,62 +2,22 @@ package knative
 
 import (
 	"fmt"
-
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"knative.dev/client/pkg/kn/commands"
-	servinglib "knative.dev/client/pkg/serving"
-	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
+	"log"
+	"os/exec"
+	"strings"
 )
 
-func Create() {
-	// get a service
-	p := commands.KnParams{}
-	p.Initialize()
-
-	client, _ := p.NewServingClient("default")
-	service, _ := client.GetService("helloworld-go")
-	fmt.Println(service.GetName())
-
-	// list services
-	serviceList, _ := client.ListServices()
-	for _, v := range serviceList.Items {
-		fmt.Println(v.GetName())
-	}
-
-	// create a service
-	var svcInstance = &servingv1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "guotuo-sdk-test3",
-			Namespace: "default",
-		},
-	}
-
-	svcInstance.Spec.Template = servingv1.RevisionTemplateSpec{
-		Spec: servingv1.RevisionSpec{},
-		ObjectMeta: metav1.ObjectMeta{
-			Annotations: map[string]string{
-				servinglib.UserImageAnnotationKey: "",
-			},
-		},
-	}
-
-	// svcInstance.Spec.Template.Spec.PodSpec.Containers = []corev1.Container{{
-	// 	Image: "docker.io/lijiawang/helloworld-go:v1",
-	// 	Name:  "hwg",
-	// }}
-
-	svcInstance.Spec.Template.Spec.Containers = []corev1.Container{{Image: "guotuo1024/knative-web-demo:version-1.0.0"}}
-
-	// servinglib.UpdateImage(svcInstance.Spec.Template, "docker.io/guotuo1024/knative-web-demo:v1")
-
-	err := client.CreateService(svcInstance)
+func Create(id, imageName string) (string, error) {
+	out, err := exec.Command("kn", "service", "create", id, "--image", imageName, "--kubeconfig", "/etc/kubernetes/admin.conf",
+		"--env", "TARGET=\"Go Sample v1\"", "--user", "1000").Output()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
+		return "", fmt.Errorf("exec: %s", err)
 	}
-	// Update
-	targetService, _ := client.GetService("guotuo-sdk-test3")
-	fmt.Println("Will update service " + targetService.GetName())
-	//servinglib.UpdateImage(&targetService.Spec.Template, "guotuo1024/knative-web-demo:version-2.0.0")
-	client.UpdateService(targetService)
+
+	fmt.Printf("Output %s\n", out)
+	myString := string(out[:])
+	splitted := strings.Split(myString, "\n")
+
+	return splitted[len(splitted)-1], nil
 }
