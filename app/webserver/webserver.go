@@ -92,6 +92,7 @@ func funcStatus(w http.ResponseWriter, r *http.Request) {
 	resp := &model.FuncStatusResponse{
 		ID:     vars["id"],
 		Status: hashmap.GetStatus(vars["id"]),
+		URL:    hashmap.GetURL(vars["id"]),
 	}
 
 	render.WriteJSONwithCode(w, resp, 200)

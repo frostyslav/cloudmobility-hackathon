@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"regexp"
 	"strings"
 )
 
@@ -17,7 +18,10 @@ func Create(id, imageName string) (string, error) {
 
 	fmt.Printf("Output %s\n", out)
 	myString := string(out[:])
-	splitted := strings.Split(myString, "\n")
 
-	return splitted[len(splitted)-1], nil
+	re := regexp.MustCompile("http://.*")
+	url := re.FindString(myString)
+	fmt.Println(strings.TrimSuffix(url, "\n"))
+
+	return url, nil
 }
