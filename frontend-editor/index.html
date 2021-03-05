@@ -206,7 +206,7 @@ function checkDeploy(urlField){
                 response.json().then(json => {
                     if(json.url != '') {
                         $(urlField).show();
-                        $(urlField).append(json.url);
+                        $(urlField).append("<a href=" + json.url + "> " + json.url + "</a>" );
                         $('#spinnerRepo').hide();
                         $('#spinnerEditor').hide();
                         $('#runRepo').prop("disabled", false);
