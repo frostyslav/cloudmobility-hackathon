@@ -142,7 +142,13 @@
 
 $('#runRepo').on('click', function (e) {
 
+    if($('#runRepo').prop("disabled") == false) { 
+        return true;
+    }
+
     $('#resultUrlRepo').hide();
+    $('#resultUrlRepo').empty();
+
     const url = document.getElementById("hosttUrl").value + "/func_create";
 
     const data = { 
@@ -183,6 +189,7 @@ $('#runRepo').on('click', function (e) {
     return true;
 })
 
+
 function checkDeploy(){
 
     const url = document.getElementById("hosttUrl").value + "/func_status/" + localStorage.hashId;
@@ -192,8 +199,6 @@ function checkDeploy(){
         method : "GET"
     };
 
-    console.log(other_params);
-    
     //call the api to check if the proccess is done
     fetch(url, other_params)
         .then(function(response) {
@@ -201,13 +206,12 @@ function checkDeploy(){
                 response.json().then(json => {
                     if(json.url != '') {
                         $('#resultUrlRepo').show();
-                        $('#resultUrlRepo').appendChild(json.url);
+                        $('#resultUrlRepo').append(json.url);
                         $('#spinnerRepo').hide();
                         $('#spinnerEditor').hide();
                         $('#runRepo').prop("disabled", false);
                         $('#runEditor').prop("disabled", false);
-                        return true;
-                    }
+                    } else { setTimeout(checkDeploy, 5000);}
                 })
             } else {
                 throw new Error("Could not reach the API: " + response.statusText);
@@ -218,7 +222,7 @@ function checkDeploy(){
             $('#runEditor').prop("disabled", false);
             alert(error.message);
         });
-    setTimeout(checkDeploy, 5000);
+    
 }
 </script>
 
@@ -257,6 +261,7 @@ require(["ace/ace", "ace/ext/language_tools"], function(ace) {
     });
     function runCode() {
         $('#resultUrlEditor').hide();
+        $('#resultUrlEditor').empty();
         
         const url = document.getElementById("endpointUrl").value;
         const data = {
