@@ -142,7 +142,7 @@
 
 $('#runRepo').on('click', function (e) {
 
-    if($('#runRepo').prop("disabled") == false) { 
+    if($('#runRepo').prop("disabled") == true) { 
         return true;
     }
 
@@ -175,7 +175,7 @@ $('#runRepo').on('click', function (e) {
             if (response.ok) {
                 response.json().then(json => {
                     localStorage.hashId = json.id
-                    checkDeploy();
+                    checkDeploy('#resultUrlRepo');
                 })
             } else {
                 throw new Error("Could not reach the API: " + response.statusText);
@@ -190,7 +190,7 @@ $('#runRepo').on('click', function (e) {
 })
 
 
-function checkDeploy(){
+function checkDeploy(urlField){
 
     const url = document.getElementById("hosttUrl").value + "/func_status/" + localStorage.hashId;
     
@@ -205,13 +205,13 @@ function checkDeploy(){
             if (response.ok) {
                 response.json().then(json => {
                     if(json.url != '') {
-                        $('#resultUrlRepo').show();
-                        $('#resultUrlRepo').append(json.url);
+                        $(urlField).show();
+                        $(urlField).append(json.url);
                         $('#spinnerRepo').hide();
                         $('#spinnerEditor').hide();
                         $('#runRepo').prop("disabled", false);
                         $('#runEditor').prop("disabled", false);
-                    } else { setTimeout(checkDeploy, 5000);}
+                    } else { setTimeout(checkDeploy(urlField), 5000);}
                 })
             } else {
                 throw new Error("Could not reach the API: " + response.statusText);
@@ -260,10 +260,15 @@ require(["ace/ace", "ace/ext/language_tools"], function(ace) {
         bindKey: { win: "ctrl-s", mac: "cmd-s" }
     });
     function runCode() {
+
+        if($('#runEditor').prop("disabled") == true) { 
+            return true;
+        }
+
         $('#resultUrlEditor').hide();
         $('#resultUrlEditor').empty();
         
-        const url = document.getElementById("endpointUrl").value;
+        const url = document.getElementById("hosttUrl").value + "/func_create";
         const data = {
             "language": "go",
             "code": btoa(editor.getValue())
@@ -271,7 +276,7 @@ require(["ace/ace", "ace/ext/language_tools"], function(ace) {
 
         const other_params = {
             headers : { "content-type" : "application/json; charset=UTF-8"},
-            body : data,
+            body : JSON.stringify(data),
             method : "POST",
             mode : "cors"
         };
@@ -283,7 +288,10 @@ require(["ace/ace", "ace/ext/language_tools"], function(ace) {
         fetch(url, other_params)
             .then(function(response) {
                 if (response.ok) {
-                    checkDeploy();
+                    response.json().then(json => {
+                        localStorage.hashId = json.id
+                        checkDeploy('#resultUrlEditor');
+                    })
                 } else {
                     throw new Error("Could not reach the API: " + response.statusText);
                 }
