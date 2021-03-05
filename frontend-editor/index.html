@@ -90,6 +90,8 @@
                                 <span class="spinner-border spinner-border-sm" ></span>
                                 Deploying code
                             </div>
+                            <div class="form-group" id="resultUrlRepo" style="display:none">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -116,6 +118,8 @@
                                 <span class="spinner-border spinner-border-sm"  ></span>
                                 Deploying code
                             </div>
+                            <div class="form-group" id="resultUrlEditor" style="display:none">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -138,11 +142,12 @@
 
 $('#runRepo').on('click', function (e) {
 
+    $('#resultUrlRepo').hide();
     const url = document.getElementById("hosttUrl").value + "/func_create";
 
     const data = { 
         "repo": {
-            "url": $('#repoUrl').val(),
+            "URL": $('#repoUrl').val(),
             "tag": $('#repoTag').val(),
             "path": $('#repoPath').val()
         }
@@ -153,8 +158,8 @@ $('#runRepo').on('click', function (e) {
     $('#runEditor').prop("disabled", true);
 
     const other_params = {
-        headers : { "content-type" : "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*" },
-        body : data,
+        headers : { "content-type" : "application/json; charset=UTF-8" },
+        body : JSON.stringify(data),
         method : "POST",
         mode : "cors"
     };
@@ -183,9 +188,8 @@ function checkDeploy(){
     const url = document.getElementById("hosttUrl").value + "/func_status/" + localStorage.hashId;
     
     const other_params = {
-        headers : { "content-type" : "application/json; charset=UTF-8", "Access-Control-Allow-Origin": "*"  },
-        method : "GET",
-        mode : "cors"
+        headers : { "content-type" : "application/json; charset=UTF-8"  },
+        method : "GET"
     };
 
     console.log(other_params);
@@ -196,7 +200,13 @@ function checkDeploy(){
             if (response.ok) {
                 response.json().then(json => {
                     if(json.url != '') {
-                        console.log("djdjdjd")
+                        $('#resultUrlRepo').show();
+                        $('#resultUrlRepo').appendChild(json.url);
+                        $('#spinnerRepo').hide();
+                        $('#spinnerEditor').hide();
+                        $('#runRepo').prop("disabled", false);
+                        $('#runEditor').prop("disabled", false);
+                        return true;
                     }
                 })
             } else {
@@ -208,12 +218,6 @@ function checkDeploy(){
             $('#runEditor').prop("disabled", false);
             alert(error.message);
         });
-    return true;
-
-    $('#spinnerRepo').hide();
-    $('#spinnerEditor').show();
-    $('#runRepo').prop("disabled", false);
-    $('#runEditor').prop("disabled", false);
     setTimeout(checkDeploy, 5000);
 }
 </script>
@@ -252,6 +256,7 @@ require(["ace/ace", "ace/ext/language_tools"], function(ace) {
         bindKey: { win: "ctrl-s", mac: "cmd-s" }
     });
     function runCode() {
+        $('#resultUrlEditor').hide();
         
         const url = document.getElementById("endpointUrl").value;
         const data = {
@@ -260,7 +265,7 @@ require(["ace/ace", "ace/ext/language_tools"], function(ace) {
         };
 
         const other_params = {
-            headers : { "content-type" : "application/json; charset=UTF-8" , "Access-Control-Allow-Origin": "*" },
+            headers : { "content-type" : "application/json; charset=UTF-8"},
             body : data,
             method : "POST",
             mode : "cors"

@@ -2,13 +2,14 @@ package webserver
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/frostyslav/cloudmobility-hackathon/app/controller"
 	"github.com/frostyslav/cloudmobility-hackathon/app/model"
 	"github.com/frostyslav/cloudmobility-hackathon/app/render"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"log"
-	"net/http"
 )
 
 var Serve http.Handler
@@ -18,8 +19,8 @@ func init() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", status).Methods("GET")
-	r.HandleFunc("/func_create", funcCreate).Methods("POST")
-	r.HandleFunc("/func_status/{id}", funcStatus).Methods("GET")
+	r.HandleFunc("/func_create", funcCreate).Methods("POST", "OPTIONS")
+	r.HandleFunc("/func_status/{id}", funcStatus).Methods("GET", "OPTIONS")
 
 	m := model.Hash{}
 	hashmap = m.New()
@@ -32,6 +33,15 @@ func status(w http.ResponseWriter, r *http.Request) {
 }
 
 func funcCreate(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+	if (*r).Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+
 	req := &model.FuncCreateRequest{}
 	err := render.ReadJSON(r, req)
 	if err != nil {
@@ -67,6 +77,15 @@ func funcCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func funcStatus(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+
+	if (*r).Method == "OPTIONS" {
+		w.WriteHeader(200)
+		return
+	}
+
 	vars := mux.Vars(r)
 
 	resp := &model.FuncStatusResponse{
