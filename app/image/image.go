@@ -110,7 +110,7 @@ func Push(imageName string) error {
 	//authConfigEncoded := base64.URLEncoding.EncodeToString(authConfigBytes)
 
 	tag := imageName
-	opts := types.ImagePushOptions{RegistryAuth: ""} //RegistryAuth: authConfigEncoded}
+	opts := types.ImagePushOptions{RegistryAuth: "MTIz"} //RegistryAuth: authConfigEncoded}
 	rd, err := cli.ImagePush(ctx, tag, opts)
 	if err != nil {
 		return fmt.Errorf("image push: %s", err)
